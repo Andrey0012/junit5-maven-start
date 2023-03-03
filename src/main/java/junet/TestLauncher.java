@@ -4,6 +4,5 @@ package junet;
 
 public class TestLauncher {
     public static void main(String[] args) {
-    //    LauncherFactory
     }
 }

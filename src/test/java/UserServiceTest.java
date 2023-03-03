@@ -78,6 +78,25 @@ class UserServiceTest {
         Optional<User> optionalUser = userService.login("ppppp", IVAN.getPassword());
         assertTrue(optionalUser.isEmpty());
     }
+     @Test
+     void throwExceptionIfUsernameOrPasswordNull() {
+        try {
+            userService.login("null", null);
+            fail("login is null trows exception");
+        }
+        catch (IllegalArgumentException error) {
+            assertTrue(true);
+        }
+
+            // второй вариант
+        assertAll(
+                () -> {
+                    IllegalArgumentException aNull = assertThrows(IllegalArgumentException.class, () -> userService.login("null", null));
+                    assertThat(aNull.getMessage()).isEqualTo("username or password is not null");
+                },
+                () -> assertThrows(IllegalArgumentException.class, () ->userService.login(null, "null"))
+        );
+     }
 
     @Test
     void usersConvertToMapById() {
