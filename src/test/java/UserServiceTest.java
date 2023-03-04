@@ -13,6 +13,7 @@ import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("fast")
+//@TestMethodOrder(MethodOrderer.DisplayName.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserServiceTest {
     private UserService userService;
@@ -53,54 +54,7 @@ class UserServiceTest {
 
     }
 
-    @Test
-    @Tag("login")
-    void loginSuccessIfUserExists() {
-        userService.add(IVAN);
-        Optional<User> user = userService.login(IVAN.getUsername(), IVAN.getPassword());
-        //можно использовать два варианта
-        assertThat(user).isPresent();
-        user.ifPresent(user1 -> assertThat(user1).isEqualTo(IVAN));
 
-//        assertTrue(user.isPresent());
-//        user.ifPresent(user1 -> assertEquals(IVAN, user1));
-    }
-
-    @Test
-    @Tag("login")
-    void loginPasswordNotCorrect() {
-        userService.add(IVAN);
-        Optional<User> optionalUser = userService.login(IVAN.getUsername(), "oooooo");
-        assertTrue(optionalUser.isEmpty());
-    }
-
-    @Test
-    @Tag("login")
-    void loginNameNotCorrect() {
-        userService.add(IVAN);
-        Optional<User> optionalUser = userService.login("ppppp", IVAN.getPassword());
-        assertTrue(optionalUser.isEmpty());
-    }
-     @Test
-     @Tag("login")
-     void throwExceptionIfUsernameOrPasswordNull() {
-        try {
-            userService.login("null", null);
-            fail("login is null trows exception");
-        }
-        catch (IllegalArgumentException error) {
-            assertTrue(true);
-        }
-
-            // второй вариант
-        assertAll(
-                () -> {
-                    IllegalArgumentException aNull = assertThrows(IllegalArgumentException.class, () -> userService.login("null", null));
-                    assertThat(aNull.getMessage()).isEqualTo("username or password is not null");
-                },
-                () -> assertThrows(IllegalArgumentException.class, () ->userService.login(null, "null"))
-        );
-     }
 
     @Test
     void usersConvertToMapById() {
@@ -122,6 +76,60 @@ class UserServiceTest {
     @AfterAll
     void closeEnd() {
         System.out.println("After all: " + this);
+
+    }
+    @Nested
+    @DisplayName("test user login")
+    @Tag("login")
+    class TestLogin {
+        @Test
+   //     @Tag("login")
+        void loginNameNotCorrect() {
+            userService.add(IVAN);
+            Optional<User> optionalUser = userService.login("ppppp", IVAN.getPassword());
+            assertTrue(optionalUser.isEmpty());
+        }
+        @Test
+ //       @Tag("login")
+        void throwExceptionIfUsernameOrPasswordNull() {
+            try {
+                userService.login("null", null);
+                fail("login is null trows exception");
+            }
+            catch (IllegalArgumentException error) {
+                assertTrue(true);
+            }
+
+            // второй вариант
+            assertAll(
+                    () -> {
+                        IllegalArgumentException aNull = assertThrows(IllegalArgumentException.class, () -> userService.login("null", null));
+                        assertThat(aNull.getMessage()).isEqualTo("username or password is not null");
+                    },
+                    () -> assertThrows(IllegalArgumentException.class, () ->userService.login(null, "null"))
+            );
+        }
+        @Test
+ //       @Tag("login")
+        void loginSuccessIfUserExists() {
+            userService.add(IVAN);
+            Optional<User> user = userService.login(IVAN.getUsername(), IVAN.getPassword());
+            //можно использовать два варианта
+            assertThat(user).isPresent();
+            user.ifPresent(user1 -> assertThat(user1).isEqualTo(IVAN));
+
+//        assertTrue(user.isPresent());
+//        user.ifPresent(user1 -> assertEquals(IVAN, user1));
+        }
+
+        @Test
+//        @Tag("login")
+        void loginPasswordNotCorrect() {
+            userService.add(IVAN);
+            Optional<User> optionalUser = userService.login(IVAN.getUsername(), "oooooo");
+            assertTrue(optionalUser.isEmpty());
+        }
+
 
     }
 }
