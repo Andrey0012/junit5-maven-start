@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.jupiter.api.Assertions.*;
 
-
+@Tag("fast")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserServiceTest {
     private UserService userService;
@@ -54,6 +54,7 @@ class UserServiceTest {
     }
 
     @Test
+    @Tag("login")
     void loginSuccessIfUserExists() {
         userService.add(IVAN);
         Optional<User> user = userService.login(IVAN.getUsername(), IVAN.getPassword());
@@ -66,6 +67,7 @@ class UserServiceTest {
     }
 
     @Test
+    @Tag("login")
     void loginPasswordNotCorrect() {
         userService.add(IVAN);
         Optional<User> optionalUser = userService.login(IVAN.getUsername(), "oooooo");
@@ -73,12 +75,14 @@ class UserServiceTest {
     }
 
     @Test
+    @Tag("login")
     void loginNameNotCorrect() {
         userService.add(IVAN);
         Optional<User> optionalUser = userService.login("ppppp", IVAN.getPassword());
         assertTrue(optionalUser.isEmpty());
     }
      @Test
+     @Tag("login")
      void throwExceptionIfUsernameOrPasswordNull() {
         try {
             userService.login("null", null);
