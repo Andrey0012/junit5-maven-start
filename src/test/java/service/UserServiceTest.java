@@ -8,11 +8,14 @@ import org.hamcrest.collection.IsMapContaining;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.*;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +40,7 @@ class UserServiceTest {
     @BeforeEach
     void prepare(UserService userService) {
         System.out.println("Before each: " + this);
-        this.userService= userService;
+        this.userService = userService;
 
     }
 
@@ -63,7 +66,6 @@ class UserServiceTest {
     }
 
 
-
     @Test
     void usersConvertToMapById() {
         userService.add(IVAN, PETR);
@@ -86,25 +88,45 @@ class UserServiceTest {
         System.out.println("After all: " + this);
 
     }
+
     @Nested
     @DisplayName("test user login")
     @Tag("login")
+    @Timeout(value = 200, unit = TimeUnit.MILLISECONDS)
     class TestLogin {
         @Test
-   //     @Tag("login")
+        @Disabled ("ignor test")
+            //     @Tag("login")
         void loginNameNotCorrect() {
             userService.add(IVAN);
             Optional<User> optionalUser = userService.login("ppppp", IVAN.getPassword());
             assertTrue(optionalUser.isEmpty());
         }
+ //       @Test
+//        @Tag("login")
+        @RepeatedTest(value = 5, name =RepeatedTest.LONG_DISPLAY_NAME )
+        void loginPasswordNotCorrect(RepetitionInfo repetitionInfo) {
+            userService.add(IVAN);
+            Optional<User> optionalUser = userService.login(IVAN.getUsername(), "oooooo");
+            assertTrue(optionalUser.isEmpty());
+        }
         @Test
- //       @Tag("login")
+        void checkinLoginFunctionalityPerformance () {
+            System.out.println(Thread.currentThread().getName());
+            assertTimeoutPreemptively(Duration.ofMillis(200L), ()-> {
+                System.out.println(Thread.currentThread().getName());
+                Thread.sleep(300L);
+               return userService.login(IVAN.getUsername(), "oooooo");
+            });
+        }
+
+        @Test
+            //       @Tag("login")
         void throwExceptionIfUsernameOrPasswordNull() {
             try {
                 userService.login("null", null);
                 fail("login is null trows exception");
-            }
-            catch (IllegalArgumentException error) {
+            } catch (IllegalArgumentException error) {
                 assertTrue(true);
             }
 
@@ -114,11 +136,12 @@ class UserServiceTest {
                         IllegalArgumentException aNull = assertThrows(IllegalArgumentException.class, () -> userService.login("null", null));
                         assertThat(aNull.getMessage()).isEqualTo("username or password is not null");
                     },
-                    () -> assertThrows(IllegalArgumentException.class, () ->userService.login(null, "null"))
+                    () -> assertThrows(IllegalArgumentException.class, () -> userService.login(null, "null"))
             );
         }
+
         @Test
- //       @Tag("login")
+            //       @Tag("login")
         void loginSuccessIfUserExists() {
             userService.add(IVAN);
             Optional<User> user = userService.login(IVAN.getUsername(), IVAN.getPassword());
@@ -130,21 +153,15 @@ class UserServiceTest {
 //        user.ifPresent(user1 -> assertEquals(IVAN, user1));
         }
 
-        @Test
-//        @Tag("login")
-        void loginPasswordNotCorrect() {
-            userService.add(IVAN);
-            Optional<User> optionalUser = userService.login(IVAN.getUsername(), "oooooo");
-            assertTrue(optionalUser.isEmpty());
-        }
+
         @ParameterizedTest(name = "{arguments} test")
 //        @NullSource
 //        @EmptySource
 //        @ValueSource(strings = {"Ivan", "Petr"})
         @MethodSource("service.UserServiceTest#getArgumentForLoginTest")
-       // @CsvSource()
+        // @CsvSource()
         @DisplayName("login param test")
-        void loginParametrizedTest (String name,String password,Optional<User> user ) {
+        void loginParametrizedTest(String name, String password, Optional<User> user) {
             userService.add(IVAN, PETR);
             Optional<User> loginUser = userService.login(name, password);
             assertThat(loginUser).isEqualTo(user);
@@ -152,7 +169,8 @@ class UserServiceTest {
 
 
     }
-    static Stream<Arguments> getArgumentForLoginTest () {
+
+    static Stream<Arguments> getArgumentForLoginTest() {
         return Stream.of(
                 Arguments.of("Ivan", "123", Optional.of(IVAN)),
                 Arguments.of("Petr", "456", Optional.of(PETR)),
