@@ -1,17 +1,24 @@
 package junet.service;
 
 
+import junet.dao.UserDAO;
 import junet.dto.User;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
 public class UserService {
     private final List<User> users = new ArrayList<>();
+    private final UserDAO userDAO;
 
+    public UserService(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
+    public boolean delete (Integer userId) {
+        return userDAO.delete(userId);
+    }
 
 
     public List<User> getAll() {

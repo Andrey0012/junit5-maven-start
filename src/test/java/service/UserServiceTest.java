@@ -2,6 +2,7 @@ package service;
 
 import ParamResorver.UserServiceParamResolver;
 import junet.dto.User;
+import junet.dao.UserDAO;
 import junet.service.UserService;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.collection.IsMapContaining;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.util.List;
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(UserServiceParamResolver.class)
 class UserServiceTest {
     private UserService userService;
+    private UserDAO userDAO;
     public static final User IVAN = User.of(1, "Ivan", "123");
     public static final User PETR = User.of(2, "Petr", "456");
 
@@ -40,7 +43,21 @@ class UserServiceTest {
     @BeforeEach
     void prepare(UserService userService) {
         System.out.println("Before each: " + this);
-        this.userService = userService;
+        this.userDAO = Mockito.mock(UserDAO.class);
+        this.userService = new UserService(userDAO);
+    }
+    @Test
+    void shouldDeleteExistedUser () {
+        userService.add(IVAN);
+  //      Mockito.doReturn(true).when(userDAO).delete(IVAN.getId()); //первый вариант
+   //     Mockito.doReturn(true).when(userDAO).delete(Mockito.any()); //второй втариант без указнаия getId()
+        Mockito.when(userDAO.delete(IVAN.getId()))
+                .thenReturn(true)
+                .thenReturn(false);
+        boolean delete = userService.delete(IVAN.getId());
+        System.out.println(userService.delete(IVAN.getId()));
+        System.out.println(userService.delete(IVAN.getId()));
+        assertThat(delete).isTrue();
 
     }
 
@@ -95,28 +112,30 @@ class UserServiceTest {
     @Timeout(value = 200, unit = TimeUnit.MILLISECONDS)
     class TestLogin {
         @Test
-        @Disabled ("ignor test")
+        @Disabled("ignor test")
             //     @Tag("login")
         void loginNameNotCorrect() {
             userService.add(IVAN);
             Optional<User> optionalUser = userService.login("ppppp", IVAN.getPassword());
             assertTrue(optionalUser.isEmpty());
         }
- //       @Test
+
+        //       @Test
 //        @Tag("login")
-        @RepeatedTest(value = 5, name =RepeatedTest.LONG_DISPLAY_NAME )
+        @RepeatedTest(value = 5, name = RepeatedTest.LONG_DISPLAY_NAME)
         void loginPasswordNotCorrect(RepetitionInfo repetitionInfo) {
             userService.add(IVAN);
             Optional<User> optionalUser = userService.login(IVAN.getUsername(), "oooooo");
             assertTrue(optionalUser.isEmpty());
         }
+
         @Test
-        void checkinLoginFunctionalityPerformance () {
+        void checkinLoginFunctionalityPerformance() {
             System.out.println(Thread.currentThread().getName());
-            assertTimeoutPreemptively(Duration.ofMillis(200L), ()-> {
+            assertTimeoutPreemptively(Duration.ofMillis(200L), () -> {
                 System.out.println(Thread.currentThread().getName());
                 Thread.sleep(300L);
-               return userService.login(IVAN.getUsername(), "oooooo");
+                return userService.login(IVAN.getUsername(), "oooooo");
             });
         }
 
