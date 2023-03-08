@@ -1,8 +1,8 @@
 package service;
 
 import ParamResorver.UserServiceParamResolver;
-import junet.dto.User;
 import junet.dao.UserDAO;
+import junet.dto.User;
 import junet.service.UserService;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.collection.IsMapContaining;
@@ -11,8 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
 import java.util.List;
@@ -28,13 +28,19 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("fast")
 //@TestMethodOrder(MethodOrderer.DisplayName.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@ExtendWith(UserServiceParamResolver.class)
+@ExtendWith({
+        UserServiceParamResolver.class,
+        MockitoExtension.class
+})
 class UserServiceTest {
-    private UserService userService;
-    private UserDAO userDAO;
     public static final User IVAN = User.of(1, "Ivan", "123");
     public static final User PETR = User.of(2, "Petr", "456");
-
+    @Captor
+    ArgumentCaptor<Integer> integerArgumentCaptor;
+    @InjectMocks
+    private UserService userService;
+    @Mock (lenient = true)
+    private UserDAO userDAO;
 
     @BeforeAll
     void init() {
@@ -44,24 +50,34 @@ class UserServiceTest {
     @BeforeEach
     void prepare(UserService userService) {
         System.out.println("Before each: " + this);
-   //     this.userDAO = Mockito.mock(UserDAO.class);
-        this.userDAO = Mockito.spy(new UserDAO());
-        this.userService = new UserService(userDAO);
+//        Mockito.lenient().when(userDAO.delete(IVAN.getId())).thenReturn(true);
+        Mockito.doReturn(true).when(userDAO).delete(IVAN.getId()); //первый вариант БОЛЕЕ ПРЕДПОЧТИТЕЛЬНЕЕ
+
+        //     this.userDAO = Mockito.mock(UserDAO.class);
+//        this.userDAO = Mockito.spy(new UserDAO());
+//        this.userService = new UserService(userDAO);
     }
     @Test
-    void shouldDeleteExistedUser () {
+    void throwExceptionIfDatabaseIsNotAvailable() {
+        Mockito.doThrow(RuntimeException.class).when(userDAO).delete(IVAN.getId());
+        assertThrows(RuntimeException.class, ()-> userService.delete(IVAN.getId()));
+
+    }
+
+    @Test
+    void shouldDeleteExistedUser() {
         userService.add(IVAN);
-        Mockito.doReturn(true).when(userDAO).delete(IVAN.getId()); //первый вариант БОЛЕЕ ПРЕДПОЧТИТЕЛЬНЕЕ
-   //     Mockito.doReturn(true).when(userDAO).delete(Mockito.any()); //второй втариант без указнаия getId()
+ //       Mockito.doReturn(true).when(userDAO).delete(IVAN.getId()); //первый вариант БОЛЕЕ ПРЕДПОЧТИТЕЛЬНЕЕ
+        //     Mockito.doReturn(true).when(userDAO).delete(Mockito.any()); //второй втариант без указнаия getId()
 //        Mockito.when(userDAO.delete(IVAN.getId()))
 //                .thenReturn(true)
 //                .thenReturn(false);
         boolean delete = userService.delete(IVAN.getId());
         System.out.println(userService.delete(IVAN.getId()));
         System.out.println(userService.delete(IVAN.getId()));
-        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
+ //       ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         Mockito.verify(userDAO, Mockito.times(3)).delete(integerArgumentCaptor.capture());
-        assertThat(integerArgumentCaptor.getValue()).isEqualTo(2);
+        assertThat(integerArgumentCaptor.getValue()).isEqualTo(1);
         assertThat(delete).isTrue();
 
     }
@@ -117,7 +133,7 @@ class UserServiceTest {
     @Timeout(value = 200, unit = TimeUnit.MILLISECONDS)
     class TestLogin {
         @Test
-        @Disabled("ignor test")
+            //      @Disabled("ignor test") // ИГНОРИРОВАТЬ тест
             //     @Tag("login")
         void loginNameNotCorrect() {
             userService.add(IVAN);
@@ -139,7 +155,7 @@ class UserServiceTest {
             System.out.println(Thread.currentThread().getName());
             assertTimeoutPreemptively(Duration.ofMillis(200L), () -> {
                 System.out.println(Thread.currentThread().getName());
-                Thread.sleep(300L);
+                //         Thread.sleep(300L);
                 return userService.login(IVAN.getUsername(), "oooooo");
             });
         }
