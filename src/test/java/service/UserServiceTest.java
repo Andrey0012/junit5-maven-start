@@ -52,7 +52,6 @@ class UserServiceTest {
         System.out.println("Before each: " + this);
 //        Mockito.lenient().when(userDAO.delete(IVAN.getId())).thenReturn(true);
         Mockito.doReturn(true).when(userDAO).delete(IVAN.getId()); //первый вариант БОЛЕЕ ПРЕДПОЧТИТЕЛЬНЕЕ
-
         //     this.userDAO = Mockito.mock(UserDAO.class);
 //        this.userDAO = Mockito.spy(new UserDAO());
 //        this.userService = new UserService(userDAO);

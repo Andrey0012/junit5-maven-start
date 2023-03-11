@@ -16,7 +16,8 @@ public class UserService {
     public UserService(UserDAO userDAO) {
         this.userDAO = userDAO;
     }
-    public boolean delete (Integer userId) {
+
+    public boolean delete(Integer userId) {
         return userDAO.delete(userId);
     }
 
@@ -31,8 +32,8 @@ public class UserService {
 
 
     public Optional<User> login(String username, String password) {
-        if (username==null || password==null) {
-            throw new  IllegalArgumentException ("username or password is not null");
+        if (username == null || password == null) {
+            throw new IllegalArgumentException("username or password is not null");
         }
         return users.stream().filter(user -> user.getUsername().equals(username))
                 .filter(user -> user.getPassword().equals(password)).findFirst();
